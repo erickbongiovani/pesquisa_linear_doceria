@@ -1,0 +1,103 @@
+{% extends "layout.html" %}
+
+{% block main %}
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Novo Insumo</h5>
+            </div>
+            <div class="card-body">
+                <form action="/insumos" method="post">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nome do Insumo</label>
+                        <input type="text" name="nome" class="form-control" placeholder="Ex: Cacau em Pó" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Custo Unitário (R$/kg)</label>
+                        <input type="number" step="0.01" name="custo_unit" class="form-control" placeholder="0.00" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Estoque Inicial (kg)</label>
+                        <input type="number" step="0.001" name="qntd_estoque" class="form-control" placeholder="0.000" required>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 fw-bold">Adicionar ao Estoque</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="card-title mb-0">Inventário de Matérias-Primas</h5>
+
+                    <div class="w-50">
+                        <input type="text" id="buscaInsumo" class="form-control border-primary" placeholder="🔍 Buscar insumo pelo nome...">
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Nome</th>
+                                <th>Custo (por kg)</th>
+                                <th>Estoque Atual</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="corpoTabela">
+                            {% for insumo in insumos %}
+                            <tr>
+                                <td>{{ insumo.id_insumo }}</td>
+                                <td class="fw-bold">{{ insumo.nome }}</td>
+                                <td class="text-center">{{ insumo.custo_unit | brl }}</td>
+                                <td>
+                                    <span class="badge bg-secondary fs-6">{{ insumo.qntd_estoque }} kg</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 1. Conecta o JS com os elementos do HTML
+    const campoBusca = document.getElementById('buscaInsumo');
+    const corpoTabela = document.getElementById('corpoTabela');
+    const linhas = corpoTabela.getElementsByTagName('tr');
+
+    // 2. Cria o "ouvinte" que dispara a cada tecla digitada
+    campoBusca.addEventListener('input', function() {
+        // Pega o texto digitado e converte para minúsculo
+        const termoDigitado = campoBusca.value.toLowerCase();
+
+        // 3. Percorre todas as linhas da tabela
+        for (let i = 0; i < linhas.length; i++) {
+            // A coluna [1] é a coluna onde está o NOME do insumo
+            const colunaNome = linhas[i].getElementsByTagName('td')[1];
+
+            if (colunaNome) {
+                // Pega o nome do insumo na tabela e converte para minúsculo
+                const textoDoInsumo = colunaNome.textContent.toLowerCase();
+
+                // 4. Se o nome do insumo incluir o que foi digitado, mostra. Se não, esconde.
+                if (textoDoInsumo.includes(termoDigitado)) {
+                    linhas[i].style.display = "";
+                } else {
+                    linhas[i].style.display = "none";
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

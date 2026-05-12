@@ -1,0 +1,121 @@
+{% extends "layout.html" %}
+
+{% block main %}
+<div class="row justify-content-center">
+
+    <!-- Painel de ação -->
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-primary text-white text-center">
+                <h5 class="mb-0"> Otimizar Mix de Produção </h5>
+            </div>
+            <div class="card-body text-center">
+                <p class="text-muted mb-4">
+                    Clique no botão abaixo para calcular a quantidade ótima de cada produto,
+                    respeitando restrições de estoque, demanda e tempo de processamento.
+                </p>
+                <form action="/otimizar" method="post">
+                    <button type="submit" class="btn btn-success btn-lg fw-bold px-5">
+                        Executar Otimização
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Resultados (só aparece após o POST) -->
+{% if plano_prod is defined and plano_prod %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">📊 Plano de Produção Otimizado</h5>
+                <span class="badge bg-{{ 'success' if status == 'Optimal' else 'warning' }} fs-6">
+                    Status: {{ status }}
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Produto</th>
+                                <th class="text-center">Quantidade Ótima</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in plano_prod %}
+                            <tr>
+                                <td class="fw-bold text-primary">{{ item[0] }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-secondary fs-6">{{ item[1] }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% elif status is defined and status == 'Infeasible' %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">⚠️ Otimização Inviável — Diagnóstico</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3">
+                    O solver retornou <strong>Infeasible</strong>. Os seguintes insumos não possuem estoque
+                    suficiente para atender à demanda mínima de todos os produtos:
+                </p>
+
+                {% if gargalos is defined and gargalos %}
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Insumo</th>
+                                <th class="text-center">Consumo Mínimo</th>
+                                <th class="text-center">Estoque Atual</th>
+                                <th class="text-center">Déficit</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for g in gargalos %}
+                            <tr>
+                                <td class="fw-bold text-danger">{{ g.nome }}</td>
+                                <td class="text-center">{{ "%.1f"|format(g.consumo_min) }}</td>
+                                <td class="text-center">{{ "%.1f"|format(g.estoque) }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-danger fs-6">-{{ "%.1f"|format(g.deficit) }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    Nenhum gargalo de estoque identificado. Verifique outras restrições (tempo, demanda).
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% elif status is defined %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="alert alert-warning text-center" role="alert">
+            <strong>Nenhum plano gerado.</strong> Status do solver: {{ status }}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
